@@ -12,6 +12,7 @@ import React from "react";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { ModeToggle } from "./mode-toggle";
+import { UserButton } from "@clerk/nextjs";
 
 interface ModelSearchAndFilterCardProps {
   searchQuery: string;
@@ -34,6 +35,7 @@ const ModelSearchAndFilterCard = ({
         </h1>
         <div className="flex items-center gap-3 px-3 text-gray-500 dark:text-neutral-400">
           <ModeToggle />
+          <UserButton afterSignOutUrl="/" />
           <PlusIcon className="w-4 h-4 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
           <MenuIcon className="w-4 h-4 cursor-pointer hover:text-black dark:hover:text-white transition-colors" />
         </div>

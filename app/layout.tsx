@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "WhatsChat",
@@ -15,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <head />
         <body>
@@ -29,6 +30,6 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
       </html>
-    </>
+    </ClerkProvider>
   );
 }
