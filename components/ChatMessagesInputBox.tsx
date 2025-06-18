@@ -7,9 +7,15 @@ import {
   SendIcon,
   XIcon,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AIModel, Message } from "./ChatCard";
 import { Badge } from "./ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface ChatMessagesInputBoxProps {
   webSearchEnabled: boolean;
@@ -28,6 +34,9 @@ interface ChatMessagesInputBoxProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  isSignedIn: boolean;
+  setShowSignUpModal: (value: boolean) => void;
+  setModalText: (value: string) => void;
 }
 
 const ChatMessagesInputBox = ({
@@ -47,7 +56,31 @@ const ChatMessagesInputBox = ({
   messagesEndRef,
   isTyping,
   setIsTyping,
+  isSignedIn,
+  setShowSignUpModal,
+  setModalText,
 }: ChatMessagesInputBoxProps) => {
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      const count = parseInt(
+        localStorage.getItem("guestMessageCount") || "0",
+        10
+      );
+      setGuestMessageCount(count);
+    }
+  }, [isSignedIn]);
+
+  const handleFeatureClick = (featureName: string) => {
+    if (!isSignedIn) {
+      setModalText(
+        `Please sign up to use premium features like ${featureName}.`
+      );
+      setShowSignUpModal(true);
+    }
+  };
+
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -77,6 +110,19 @@ const ChatMessagesInputBox = ({
   // Handle message sending
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
+
+    if (!isSignedIn) {
+      if (guestMessageCount >= 3) {
+        setModalText(
+          "You've reached your free message limit. Please sign up to continue."
+        );
+        setShowSignUpModal(true);
+        return;
+      }
+      const newCount = guestMessageCount + 1;
+      setGuestMessageCount(newCount);
+      localStorage.setItem("guestMessageCount", newCount.toString());
+    }
 
     // Add user message
     const userMessage: Message = {
@@ -228,25 +274,63 @@ const ChatMessagesInputBox = ({
           {/* Toolbar */}
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-2">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={cn(
-                  "p-2 rounded-xl transition-colors flex items-center gap-1 border border-neutral-200/90 dark:border-neutral-700/90",
-                  webSearchEnabled
-                    ? "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300"
-                    : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
-                )}
-              >
-                <GlobeIcon className="w-5 h-5" />
-                <p className="text-sm">search</p>
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (isSignedIn) {
+                          setWebSearchEnabled(!webSearchEnabled);
+                        } else {
+                          handleFeatureClick("web search");
+                        }
+                      }}
+                      className={cn(
+                        "p-2 rounded-xl transition-colors flex items-center gap-1 border border-neutral-200/90 dark:border-neutral-700/90",
+                        webSearchEnabled
+                          ? "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300"
+                          : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-300",
+                        !isSignedIn && "cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <GlobeIcon className="w-5 h-5" />
+                      <p className="text-sm">search</p>
+                    </button>
+                  </TooltipTrigger>
+                  {!isSignedIn && (
+                    <TooltipContent>
+                      <p>Sign up to enable web search</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
 
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 transition-colors"
-              >
-                <PaperclipIcon className="w-5 h-5" />
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (isSignedIn) {
+                          fileInputRef.current?.click();
+                        } else {
+                          handleFeatureClick("file uploads");
+                        }
+                      }}
+                      className={cn(
+                        "p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 transition-colors",
+                        !isSignedIn && "cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <PaperclipIcon className="w-5 h-5" />
+                    </button>
+                  </TooltipTrigger>
+                  {!isSignedIn && (
+                    <TooltipContent>
+                      <p>Sign up to attach files</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="flex items-center">
               <button

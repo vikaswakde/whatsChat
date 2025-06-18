@@ -7,13 +7,14 @@ import {
   LoaderIcon,
   SparklesIcon,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatInfoMenuCard from "./ChatInfoMenuCard";
 import LlmModelsListCard from "./LlmModelsListCard";
 import ModelSearchAndFilterCard from "./ModelSearchAndFilterCard";
 import ChatMessagesInputBox from "./ChatMessagesInputBox";
 import WelcomeCard from "./WelcomeCard";
 import { Gemini, OpenAI } from "@lobehub/icons";
+import { SignUpButton, useUser } from "@clerk/nextjs";
 
 // Define message type
 export type Message = {
@@ -79,6 +80,9 @@ const aiModels: AIModel[] = [
 ];
 
 const ChatCard = () => {
+  const { isSignedIn } = useUser();
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [modalText, setModalText] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [allModels, setAllModels] = useState<AIModel[]>(aiModels);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
@@ -238,6 +242,9 @@ const ChatCard = () => {
                 messagesEndRef={messagesEndRef}
                 isTyping={isTyping}
                 setIsTyping={setIsTyping}
+                isSignedIn={!!isSignedIn}
+                setShowSignUpModal={setShowSignUpModal}
+                setModalText={setModalText}
               />
             </div>
           </>
@@ -246,6 +253,31 @@ const ChatCard = () => {
           <WelcomeCard />
         )}
       </div>
+      {showSignUpModal && (
+        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-8 text-center shadow-xl w-full max-w-md mx-4">
+            <h2 className="text-2xl font-bold mb-4 text-neutral-800 dark:text-neutral-200">
+              Unlock Full Access
+            </h2>
+            <p className="mb-6 text-neutral-600 dark:text-neutral-400">
+              {modalText}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowSignUpModal(false)}
+                className="px-6 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <SignUpButton mode="modal">
+                <button className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
